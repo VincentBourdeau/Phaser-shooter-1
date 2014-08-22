@@ -1,3 +1,4 @@
+/*
 Submarine = function ( index, game ) {
 
     this.game = game;
@@ -10,12 +11,6 @@ Submarine = function ( index, game ) {
 };
 
 Submarine.prototype = {
-
-  preload: function () {
-
-    this.game.load.spritesheet('submarine', 'assets/game/enemy.png', 32, 32);
-
-  },
 
   create: function(){
 
@@ -40,7 +35,7 @@ Submarine.prototype = {
 
     //
     this.game.physics.arcade.overlap(
-      this.player, this.sprite, this.playerCollision, null, this
+      aSubmarine2, this.sprite, this.playerCollision, null, this
     );
 
   },
@@ -49,7 +44,7 @@ Submarine.prototype = {
 
   },
 
-  playerCollision: function(player, me){
+  playerCollision: function(submarine2, me){
     me.destroy();
   },
 
@@ -67,3 +62,4 @@ Submarine.prototype = {
   }
 
 }
+*/
