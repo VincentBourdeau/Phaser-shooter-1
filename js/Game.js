@@ -546,7 +546,7 @@ BasicGame.Game.prototype = {
     //  Fire button
     if (this.input.keyboard.isDown(Phaser.Keyboard.Z) ||
       this.input.activePointer.isDown) {
-      if (this.stageIsEnded && this.game.time.now > this.HUD.showReturn) {
+      if (this.stageIsEnded && this.game.time.now > this.HUD.showReturn && this.HUD.returnText) {
         this.quitGame();
       } else {
         this.fire();
