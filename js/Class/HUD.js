@@ -7,12 +7,12 @@
  *
  */
 
-HUD = function ( game, score, Player, nbBombs ) {
+HUD = function ( game, score, playerLifes, nbBombs ) {
 
     //  Game's vars
     this.game = game;
     this.score = score;
-    this.nbLifes = Player.nbLives;
+    this.nbLifes = playerLifes;
     this.nbBombs = nbBombs;
 
     //  HUD.instructions
