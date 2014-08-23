@@ -105,8 +105,7 @@ BasicGame.Game.prototype = {
     this.score = 0;
     this.stageScore = 20000;
 
-    //  HUD
-    this.HUD = new HUD(this.game, this.score);
+    
 
     //  PowerUps
     this.powerUpPool = null;
@@ -115,17 +114,11 @@ BasicGame.Game.prototype = {
     this.powerUp2IsOnFor = 0;
     this.powerUp2Duration = 25000;
 
-    //  Bombs
-    this.bombsPool = null;
-    this.nbBombs = 3;
-    this.bombActive = false;
-    this.bombActiveFor = 0;
-    this.bombActiveTime = 2000;
+    
 
     //  Player
     this.player = null;
     this.playerSpeed = 300;
-    this.lives = null;
     this.nbLives = 3;
     this.bulletPool = null;
     this.nextShotAt = 0;
@@ -136,6 +129,15 @@ BasicGame.Game.prototype = {
     this.maxWeaponLevel = 7;
     this.ghostUntil = null;
     this.ghostDuration = 3000;
+
+    //  Bombs
+    this.nbBombs = 3;
+    this.bombActive = false;
+    this.bombActiveFor = 0;
+    this.bombActiveTime = 2000;
+
+    //  HUD
+    this.HUD = new HUD(this.game, this.score, this.nbLives, this.nbBombs);
 
     //  Enemy
     this.enemyPool = null;
@@ -340,19 +342,7 @@ BasicGame.Game.prototype = {
 
   setupText: function() {
 
-    //  Add Lifes
-    this.lives = this.add.group();
-    for (var i = 0; i < this.nbLives; i++) {
-      var life = this.lives.create(924 + (30 * i), 30, 'player');
-      life.scale.setTo(0.5, 0.5);
-      life.anchor.setTo(0.5, 0.5);
-    }
-
-    //  Add Bombs
-    this.bombsPool = this.add.group();
-    for (var i = 0; i < this.nbBombs; i++) {
-      var bomb = this.bombsPool.create(30 + (30 * i), 15, 'bomb');
-    }
+    
 
   },
 
@@ -741,13 +731,11 @@ BasicGame.Game.prototype = {
 
     this.nextBombAt = this.time.now + this.useBombDelay;
 
-    var bomb = this.bombsPool.getFirstAlive();
-
-    if (bomb) {
+    if ( this.HUD.bombsIconsPool.getFirstAlive() ) {
 
       this.explosionSFX.play();
 
-      bomb.kill();
+      this.HUD.bombsIconsPool.getFirstAlive().kill();
 
       //  Add the bomb effect .png
       this.bombBlast = this.add.tileSprite(0, 0, 1024, 768, 'bombBlast');
@@ -778,10 +766,10 @@ BasicGame.Game.prototype = {
     explosion.animations.add('boom');
     explosion.play('boom', 15, false, true);*/
 
-    var life = this.lives.getFirstAlive();
-    if (life) {
 
-      life.kill();
+    if ( this.HUD.livesIcons.getFirstAlive() ) {
+
+      this.HUD.livesIcons.getFirstAlive().kill();
 
       this.weaponLevel = 0;
 
@@ -792,9 +780,9 @@ BasicGame.Game.prototype = {
       this.player.play('ghost');
 
     } else {
+      this.HUD.displayEnd(false);
       this.explode(player);
       player.kill();
-      this.HUD.displayEnd(false);
       this.endStage();
     }
 

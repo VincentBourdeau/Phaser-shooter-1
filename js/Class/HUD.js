@@ -7,11 +7,13 @@
  *
  */
 
-HUD = function ( game, score ) {
+HUD = function ( game, score, playerLifes, nbBombs ) {
 
     //  Game's vars
     this.game = game;
     this.score = score;
+    this.nbLifes = playerLifes;
+    this.nbBombs = nbBombs;
 
     //  HUD.instructions
     this.instructions = null;
@@ -47,6 +49,13 @@ HUD = function ( game, score ) {
       font: '72px serif',
       fill: '#fff'
     };
+
+    //  Lives Icons
+    this.livesIcons = null;
+
+    //  Bombs Icons
+    this.bombsIconsPool = null;
+
 };
 
 HUD.prototype = {
@@ -68,6 +77,20 @@ HUD.prototype = {
     //  Add HUD.scoreText
     this.scoreText = this.game.add.text(510, 30, '' + this.score, this.scoreTxtStyle);
     this.scoreText.anchor.setTo(0.5, 0.5);
+
+    //  Add Lifes icons
+    this.livesIcons = this.game.add.group();
+    for (var i = 0; i < this.nbLifes; i++) {
+      var life = this.livesIcons.create(924 + (30 * i), 30, 'player');
+      life.scale.setTo(0.5, 0.5);
+      life.anchor.setTo(0.5, 0.5);
+    }
+
+    //  Add Bombs icons
+    this.bombsIconsPool = this.game.add.group();
+    for (var i = 0; i < this.nbBombs; i++) {
+      var bomb = this.bombsIconsPool.create(30 + (30 * i), 15, 'bomb');
+    }
 
   },
 
@@ -101,6 +124,8 @@ HUD.prototype = {
 
   //  Debug function
   render: function(){},
+  
+  
 
 
 
