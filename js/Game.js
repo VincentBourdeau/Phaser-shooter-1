@@ -37,13 +37,15 @@ BasicGame.Game.prototype = {
     //  Add the sea
     this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
 
+    
+
     //  Submarines
     this.Submarines.create();
 
     //  Destroyers
     this.Destroyers.create();
 
-    this.setupPlayer();
+    
 
     this.setupItems();
 
@@ -55,11 +57,13 @@ BasicGame.Game.prototype = {
 
     this.setupAudio();
 
+    //  Player
+    this.Player.create();
+
     //  HUD
     this.HUD.create();
 
-    //  Create KeyBoard Inputs
-    this.cursors = this.input.keyboard.createCursorKeys();
+    
 
   },
 
@@ -74,15 +78,18 @@ BasicGame.Game.prototype = {
     //  Destroyers
     this.Destroyers.update();
 
+
+
     this.checkCollisions();
 
     this.spawnEnemies();
 
     this.enemyFire();
 
-    this.processPlayerInput();
-
     this.processDelayedEffects();
+
+    //  Player
+    this.Player.update();
 
     //  HUD
     this.HUD.update();
@@ -109,7 +116,7 @@ BasicGame.Game.prototype = {
     this.bombBlast = null;
     this.score = 0;
     this.stageScore = 20000;
-
+    this.cursors = null;
     
 
     //  PowerUps
@@ -119,30 +126,11 @@ BasicGame.Game.prototype = {
     this.powerUp2IsOnFor = 0;
     this.powerUp2Duration = 25000;
 
-    
-
-    //  Player
-    this.player = null;
-    this.playerSpeed = 300;
-    this.nbLives = 3;
-    this.bulletPool = null;
-    this.nextShotAt = 0;
-    this.shotDelay = 100;
-    this.nextBombAt = 0;
-    this.useBombDelay = 2000;
-    this.weaponLevel = 0;
-    this.maxWeaponLevel = 7;
-    this.ghostUntil = null;
-    this.ghostDuration = 3000;
-
     //  Bombs
     this.nbBombs = 3;
     this.bombActive = false;
     this.bombActiveFor = 0;
     this.bombActiveTime = 2000;
-
-    //  HUD
-    this.HUD = new HUD(this.game, this.score, this.nbLives, this.nbBombs);
 
     //  Submarines
     this.Submarines = new Submarines(this.game);
@@ -177,27 +165,16 @@ BasicGame.Game.prototype = {
     this.nextBossShotAt = 0;
     this.bossShotDelay = 1000;
 
+    //  Player
+    this.Player = new Player(this.game, this.enemyPool, this.shooterPool, this.bossPool, this.enemyBulletPool, this.powerUpPool, this.powerUp2Pool);
+
+    //  HUD
+    this.HUD = new HUD(this.game, this.score, this.Player, this.nbBombs);
+
     //  Temp for testing
     this.enemyDropRate = 0.5;
     this.shooterDropRate = 0.5;
     this.stageScore = 2000;
-
-  },
-
-  setupPlayer: function() {
-
-    //  Add the player
-    this.player = this.add.sprite(400, 650, 'player');
-    this.player.anchor.setTo(0.5, 0.5);
-    this.player.animations.add('fly', [0, 1, 2], 20, true);
-    this.player.animations.add('ghost', [3, 0, 3, 1], 20, true);
-    this.player.play('fly');
-    this.physics.enable(this.player, Phaser.Physics.ARCADE);
-    this.player.speed = this.playerSpeed;
-    this.player.body.collideWorldBounds = true;
-    // 20 x 20 pixel hitbox, centered a little bit higher than the center
-    this.player.body.setSize(20, 20, 0, -5);
-    this.weaponLevel = 0;
 
   },
 
@@ -214,6 +191,8 @@ BasicGame.Game.prototype = {
     this.powerUpPool.setAll('checkWorldBounds', true);
     this.powerUpPool.setAll('reward', 100, false, false, 0, true);
 
+    this.Player.powerUpPool = this.powerUpPool;
+
     // Add the power up #2
     this.powerUp2Pool = this.add.group();
     this.powerUp2Pool.enableBody = true;
@@ -224,6 +203,8 @@ BasicGame.Game.prototype = {
     this.powerUp2Pool.setAll('outOfBoundsKill', true);
     this.powerUp2Pool.setAll('checkWorldBounds', true);
     this.powerUp2Pool.setAll('reward', 500, false, false, 0, true);
+
+    this.Player.powerUp2Pool = this.powerUp2Pool;
 
   },
 
@@ -251,7 +232,7 @@ BasicGame.Game.prototype = {
       }, this);
     });
 
-
+    this.Player.enemyPool = this.enemyPool;
 
     //  Add enemy2
     this.shooterPool = this.add.group();
@@ -277,7 +258,7 @@ BasicGame.Game.prototype = {
     // start spawning 5 seconds into the game
     this.nextShooterAt = this.time.now + 5000;
 
-
+    this.Player.shooterPool = this.shooterPool;
 
     //  Add the BOSS
     this.bossPool = this.add.group();
@@ -302,26 +283,13 @@ BasicGame.Game.prototype = {
 
     this.boss = this.bossPool.getTop();
 
+    this.Player.bossPool = this.bossPool;
+
   },
 
   setupBullets: function() {
 
-    //  Add the bullets
-    //  Add an empty sprite group into our game
-    this.bulletPool = this.add.group();
-    //  Enable physics to the whole sprite group
-    this.bulletPool.enableBody = true;
-    this.bulletPool.physicsBodyType = Phaser.Physics.ARCADE;
-    //  Add 100 'bullet' sprites in the group.
-    //  By default this uses the first frame of the sprite sheet and
-    //  sets the initial state as non-existing (i.e. killed/dead)
-    this.bulletPool.createMultiple(100, 'bullet');
-    //  Sets anchors of all sprites
-    this.bulletPool.setAll('anchor.x', 0.5);
-    this.bulletPool.setAll('anchor.y', 0.5);
-    //  Automatically kill the bullet sprites when they go out of bounds
-    this.bulletPool.setAll('outOfBoundsKill', true);
-    this.bulletPool.setAll('checkWorldBounds', true);
+    
 
     //  Add the enemy bullets
     this.enemyBulletPool = this.add.group();
@@ -356,7 +324,6 @@ BasicGame.Game.prototype = {
     this.explosionSFX = this.add.audio('explosion');
     this.playerExplosionSFX = this.add.audio('playerExplosion');
     this.enemyFireSFX = this.add.audio('enemyFire');
-    this.playerFireSFX = this.add.audio('playerFire');
     this.powerUpSFX = this.add.audio('powerUp');
 
   },
@@ -373,37 +340,37 @@ BasicGame.Game.prototype = {
 
     //  Player.bullet -> enemy.body
     this.physics.arcade.overlap(
-      this.bulletPool, this.enemyPool, this.enemyHit, null, this
+      this.Player.bulletPool, this.enemyPool, this.enemyHit, null, this
     );
 
     //  Player.bullet -> shooter.body
     this.physics.arcade.overlap(
-      this.bulletPool, this.shooterPool, this.enemyHit, null, this
+      this.Player.bulletPool, this.shooterPool, this.enemyHit, null, this
     );
 
     //  Player.body -> enemy.body
-    this.physics.arcade.overlap(
-      this.player, this.enemyPool, this.playerHit, null, this
+    this.game.physics.arcade.overlap(
+      this.Player.sprite, this.enemyPool, this.playerHit, null, this
     );
 
     //  Player.body -> shooter.body
-    this.physics.arcade.overlap(
-      this.player, this.shooterPool, this.playerHit, null, this
+    this.game.physics.arcade.overlap(
+      this.Player.sprite, this.shooterPool, this.playerHit, null, this
     );
 
     //  enemy.bullet -> player.body
-    this.physics.arcade.overlap(
-      this.player, this.enemyBulletPool, this.playerHit, null, this
+    this.game.physics.arcade.overlap(
+      this.Player.sprite, this.enemyBulletPool, this.playerHit, null, this
     );
 
     //  Player.body -> powerUp.body
-    this.physics.arcade.overlap(
-      this.player, this.powerUpPool, this.playerPowerUp, null, this
+    this.game.physics.arcade.overlap(
+      this.Player.sprite, this.powerUpPool, this.playerPowerUp, null, this
     );
 
     //  Player.body -> powerUp2.body
-    this.physics.arcade.overlap(
-      this.player, this.powerUp2Pool, this.playerPowerUp2, null, this
+    this.game.physics.arcade.overlap(
+      this.Player.sprite, this.powerUp2Pool, this.playerPowerUp2, null, this
     );
 
     //  Enemy.body -> BombBlast
@@ -421,7 +388,7 @@ BasicGame.Game.prototype = {
 
       //  Player.body -> Boss.body
       this.physics.arcade.overlap(
-        this.player, this.bossPool, this.playerHit, null, this
+        this.Player.sprite, this.bossPool, this.playerHit, null, this
       );
 
     }
@@ -477,7 +444,7 @@ BasicGame.Game.prototype = {
       if (this.time.now > enemy.nextShotAt && this.enemyBulletPool.countDead() > 0) {
         var bullet = this.enemyBulletPool.getFirstExists(false);
         bullet.reset(enemy.x, enemy.y);
-        this.physics.arcade.moveToObject(bullet, this.player, 150);
+        this.physics.arcade.moveToObject(bullet, this.Player.sprite, 150);
         enemy.nextShotAt = this.time.now + this.shooterShotDelay;
         this.enemyFireSFX.play();
       }
@@ -500,62 +467,19 @@ BasicGame.Game.prototype = {
 
         if (this.boss.health > 250) {
           // aim directly at the player
-          this.physics.arcade.moveToObject(leftBullet, this.player, 150);
-          this.physics.arcade.moveToObject(rightBullet, this.player, 150);
+          this.physics.arcade.moveToObject(leftBullet, this.Player.sprite, 150);
+          this.physics.arcade.moveToObject(rightBullet, this.Player.sprite, 150);
         } else {
           // aim slightly off center of the player
           this.physics.arcade.moveToXY(
-            leftBullet, this.player.x - i * 100, this.player.y, 150
+            leftBullet, this.Player.sprite.x - i * 100, this.Player.sprite.y, 150
           );
           this.physics.arcade.moveToXY(
-            rightBullet, this.player.x + i * 100, this.player.y, 150
+            rightBullet, this.Player.sprite.x + i * 100, this.Player.sprite.y, 150
           );
         }
       }
 
-    }
-
-  },
-
-  processPlayerInput: function() {
-
-    //  Set Player velocity + movements controls
-    this.player.body.velocity.x = 0;
-    this.player.body.velocity.y = 0;
-
-    //  With keyboard input - Left/Right
-    if (this.cursors.left.isDown) {
-      this.player.body.velocity.x = -this.player.speed;
-    } else if (this.cursors.right.isDown) {
-      this.player.body.velocity.x = this.player.speed;
-    }
-
-    //  With keyboard input - Up/Down
-    if (this.cursors.up.isDown) {
-      this.player.body.velocity.y = -this.player.speed;
-    } else if (this.cursors.down.isDown) {
-      this.player.body.velocity.y = this.player.speed;
-    }
-
-    //  With Click/Touch - goto
-    if (this.input.activePointer.isDown &&
-      this.physics.arcade.distanceToPointer(this.player) > 15) {
-      this.physics.arcade.moveToPointer(this.player, this.player.speed);
-    }
-
-    //  Fire button
-    if (this.input.keyboard.isDown(Phaser.Keyboard.Z) ||
-      this.input.activePointer.isDown) {
-      if (this.stageIsEnded && this.game.time.now > this.HUD.showReturn) {
-        this.quitGame();
-      } else {
-        this.fire();
-      }
-    }
-
-    //  BOMB button
-    if (this.input.keyboard.isDown(Phaser.Keyboard.X)) {
-      this.releaseBomb();
     }
 
   },
@@ -632,100 +556,6 @@ BasicGame.Game.prototype = {
    * CUSTOM MADE FUNCTIONS
    *
    */
-  fire: function() {
-
-    //  If can shoot ...
-    if (!this.player.alive || this.nextShotAt > this.time.now) {
-      return;
-    }
-
-    this.nextShotAt = this.time.now + this.shotDelay;
-
-    this.playerFireSFX.play();
-
-
-
-    var bullet;
-
-    if (this.powerUp2IsOn) {
-
-      if (this.bulletPool.countDead() < 10) {
-        return;
-      }
-
-      for (var i = 0; i < 2; i++) {
-
-        bullet = this.bulletPool.getFirstExists(false);
-        // spawn left bullet slightly left off center
-        bullet.reset(this.player.x - 20, this.player.y - 10 + (i * 10));
-        // the left bullets spread from -95 degrees to -135 degrees
-        bullet.body.velocity.y = -700;
-
-
-        bullet = this.bulletPool.getFirstExists(false);
-        // spawn right bullet slightly right off center
-        bullet.reset(this.player.x - 10, this.player.y - 10 + (i * 10));
-        // the right bullets spread from -85 degrees to -45
-        bullet.body.velocity.y = -700;
-
-
-        bullet = this.bulletPool.getFirstExists(false);
-        // spawn right bullet slightly right off center
-        bullet.reset(this.player.x, this.player.y - 10 + (i * 10));
-        // the right bullets spread from -85 degrees to -45
-        bullet.body.velocity.y = -700;
-
-
-        bullet = this.bulletPool.getFirstExists(false);
-        // spawn right bullet slightly right off center
-        bullet.reset(this.player.x + 10, this.player.y - 10 + (i * 10));
-        // the right bullets spread from -85 degrees to -45
-        bullet.body.velocity.y = -700;
-
-
-        bullet = this.bulletPool.getFirstExists(false);
-        // spawn right bullet slightly right off center
-        bullet.reset(this.player.x + 20, this.player.y - 10 + (i * 10));
-        // the right bullets spread from -85 degrees to -45
-        bullet.body.velocity.y = -700;
-
-      }
-
-      //  Normal Shoot lvl 1
-    } else if (this.weaponLevel === 0) {
-
-      bullet = this.bulletPool.getFirstExists(false);
-      bullet.reset(this.player.x, this.player.y - 20);
-      bullet.body.velocity.y = -500;
-
-      //  Upgraded shoot via powerUps
-    } else {
-
-      if (this.bulletPool.countDead() < this.weaponLevel * 2) {
-        return;
-      }
-
-      for (var i = 0; i < this.weaponLevel; i++) {
-
-        bullet = this.bulletPool.getFirstExists(false);
-
-        // spawn left bullet slightly left off center
-        bullet.reset(this.player.x - (10 + i * 6), this.player.y - 20);
-        // the left bullets spread from -95 degrees to -135 degrees
-        this.physics.arcade.velocityFromAngle(-95 - i * 10, 500, bullet.body.velocity);
-
-        bullet = this.bulletPool.getFirstExists(false);
-
-        // spawn right bullet slightly right off center
-        bullet.reset(this.player.x + (10 + i * 6), this.player.y - 20);
-        // the right bullets spread from -85 degrees to -45
-        this.physics.arcade.velocityFromAngle(-85 + i * 10, 500, bullet.body.velocity);
-
-      }
-
-    }
-
-  },
 
   releaseBomb: function() {
 
@@ -782,7 +612,7 @@ BasicGame.Game.prototype = {
       this.powerUp2IsOnFor = 0;
 
       this.ghostUntil = this.time.now + this.ghostDuration;
-      this.player.play('ghost');
+      this.Player.sprite.play('ghost');
 
     } else {
       this.HUD.displayEnd(false);
