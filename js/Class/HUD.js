@@ -89,7 +89,8 @@ HUD.prototype = {
     //  Add Bombs icons
     this.bombsIconsPool = this.game.add.group();
     for (var i = 0; i < this.nbBombs; i++) {
-      var bomb = this.bombsIconsPool.create(30 + (30 * i), 15, 'bomb');
+      var bomb = this.bombsIconsPool.create(30 + (30 * i), 30, 'bomb');
+      bomb.anchor.setTo(0.5, 0.5);
     }
 
   },

@@ -49,8 +49,6 @@ BasicGame.Game.prototype = {
 
     this.setupExplosions();
 
-    this.setupText();
-
     this.setupAudio();
 
     //  HUD
@@ -81,11 +79,8 @@ BasicGame.Game.prototype = {
 
   },
 
-  render: function() {
-    //  For debug only ...
-    //this.game.debug.body(this.enemy);
-    //this.game.debug.body(this.player);
-  },
+  //  Debug ...
+  render: function() {},
 
 
 
@@ -337,12 +332,6 @@ BasicGame.Game.prototype = {
     this.explosionPool.forEach(function(explosion) {
       explosion.animations.add('boom');
     });
-
-  },
-
-  setupText: function() {
-
-    
 
   },
 
