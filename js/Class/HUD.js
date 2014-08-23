@@ -64,7 +64,7 @@ HUD.prototype = {
    *
    *  FUNCTION create();
    *
-   *  Contructor, init, add default + intro text
+   *  Constructor, init, add default + intro text
    *
    */
   create: function(){

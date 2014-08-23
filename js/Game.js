@@ -34,10 +34,14 @@ BasicGame.Game.prototype = {
     //  Initalize Game's variables
     this.initVars();
 
-
-
     //  Add the sea
     this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
+
+    //  Submarines
+    this.Submarines.create();
+
+    //  Destroyers
+    this.Destroyers.create();
 
     this.setupPlayer();
 
@@ -63,6 +67,12 @@ BasicGame.Game.prototype = {
 
     //	Constantly move the sea
     this.sea.tilePosition.y += 0.2;
+
+    //  Submarines
+    this.Submarines.update();
+
+    //  Destroyers
+    this.Destroyers.update();
 
     this.checkCollisions();
 
@@ -133,6 +143,12 @@ BasicGame.Game.prototype = {
 
     //  HUD
     this.HUD = new HUD(this.game, this.score, this.nbLives, this.nbBombs);
+
+    //  Submarines
+    this.Submarines = new Submarines(this.game);
+
+    //  Destroyers
+    this.Destroyers = new Destroyers(this.game);
 
     //  Enemy
     this.enemyPool = null;
@@ -781,10 +797,6 @@ BasicGame.Game.prototype = {
     bullet.kill();
 
     //  Add an explosion
-    /*var explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);*/
     this.damageEnemy(enemy, 1);
   },
 
@@ -794,7 +806,21 @@ BasicGame.Game.prototype = {
 
   damageEnemy: function(enemy, damage) {
 
-    enemy.damage(damage);
+    enemy.damage(damage); //  BUG - ERROR - NEED UPDATE - RENDER :
+    /*
+                              Uncaught TypeError: Cannot call method 'damage' of null Game.js:813
+                              BasicGame.Game.damageEnemy Game.js:813
+                              BasicGame.Game.playerHit Game.js:766
+                              b.Physics.Arcade.collideSpriteVsGroup phaser.min.js:16
+                              b.Physics.Arcade.collideHandler phaser.min.js:16
+                              b.Physics.Arcade.overlap phaser.min.js:16
+                              BasicGame.Game.checkCollisions Game.js:395
+                              BasicGame.Game.update Game.js:77
+                              b.StateManager.update phaser.min.js:7
+                              b.Game.update phaser.min.js:9
+                              b.RequestAnimationFrame.updateRAF phaser.min.js:13
+                              window.requestAnimationFrame.forceSetTimeOut._onLoop
+     */
 
     if (enemy.alive) {
 
@@ -924,6 +950,10 @@ BasicGame.Game.prototype = {
     this.bossPool.destroy();
     this.enemyBulletPool.destroy();
 
+    this.Destroyers.endStage();
+
+    this.Submarines.endStage();
+
     this.bombActive = false;
     this.bombActiveFor = 0;
 
@@ -938,6 +968,8 @@ BasicGame.Game.prototype = {
     this.explosionPool.destroy();
 
     this.HUD.quitGame();
+
+    this.Destroyers.quitGame();
 
     this.score = 0;
 
