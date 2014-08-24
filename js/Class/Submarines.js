@@ -17,8 +17,8 @@ Submarines = function ( game ) {
     this.reward = 1000;
     this.dropRate = 0.5;
     this.nextSubmarineAt = 0;
-    this.SubmarinesSpawnAt = 10000;
-    this.SubmarinesSpawnRate = 15000;
+    this.SubmarinesSpawnAt = 25000;
+    this.SubmarinesSpawnRate = 30000;
     this.submarineInitialHealth = 100;
 
 };
@@ -87,7 +87,7 @@ Submarines.prototype = {
 
       // move to target and rotate the sprite accordingly
       submarine.rotation = this.game.physics.arcade.moveToXY(
-        submarine, target, 768, this.game.rnd.integerInRange(30, 80)
+        submarine, target, 768, 10
       ) - Math.PI / 2;
 
       submarine.play('move');

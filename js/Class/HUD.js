@@ -7,13 +7,14 @@
  *
  */
 
-HUD = function ( game, score, playerLifes, nbBombs ) {
+HUD = function ( game, score, playerLifes, nbBombs, stage ) {
 
     //  Game's vars
     this.game = game;
     this.score = score;
     this.nbLifes = playerLifes;
     this.nbBombs = nbBombs;
+    this.gameStage = stage;
 
     //  HUD.instructions
     this.instructions = null;
@@ -114,7 +115,11 @@ HUD.prototype = {
     //  Add a “back to main menu” after a set period of time
     if (this.showReturn && this.game.time.now > this.showReturn) {
 
-      this.returnText = this.game.add.text(512, 400, this.showReturnTxt, this.showReturnStyle);
+      var msg = this.showReturnTxt;
+
+      if( this.gameStage < 2 ) msg = "Entering stage : " + (this.gameStage + 1);
+
+      this.returnText = this.game.add.text(512, 400, msg, this.showReturnStyle);
       this.returnText.anchor.setTo(0.5, 0.5);
       this.showReturn = false;
 
@@ -156,6 +161,15 @@ HUD.prototype = {
 
     //  Show “back to main menu” in [x] seconds
     this.showReturn = this.game.time.now + this.showReturnDuration;
+
+  },
+
+  nextStage: function(stage){
+
+    this.gameStage = stage;
+
+    this.endText.destroy();
+    this.returnText.destroy();
 
   },
 

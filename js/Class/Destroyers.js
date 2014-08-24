@@ -17,8 +17,8 @@ Destroyers = function ( game ) {
     this.reward = 1000;
     this.dropRate = 0.5;
     this.nextDestroyerAt = 0;
-    this.destroyerSpawnAt = 10000;
-    this.destroyerSpawnRate = 15000;
+    this.destroyerSpawnAt = 25000;
+    this.destroyerSpawnRate = 30000;
     this.destroyerInitialHealth = 100;
 
 };
@@ -87,7 +87,7 @@ Destroyers.prototype = {
 
       // move to target and rotate the sprite accordingly
       destroyer.rotation = this.game.physics.arcade.moveToXY(
-        destroyer, target, 768, this.game.rnd.integerInRange(30, 80)
+        destroyer, target, 768, 20
       ) - Math.PI / 2;
 
       destroyer.play('move');
