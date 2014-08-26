@@ -21,97 +21,50 @@ BasicGame.Game = function(game) {
   this.physics;     //	the physics manager
   this.rnd;         //	the repeatable random number generator
 
-  this.player = null;
-
 };
 
 BasicGame.Game.prototype = {
 
   /**
-   * DEFAULT PHASER'S AUTO FUNCTIONS
+   * Init();
+   * Initialize game variables
    *
    */
-  create: function() {
-
-    //  Initalize Game's variables
-    this.initVars();
-
-
-
-    //  Add the sea
-    this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
-
-    this.setupPlayer();
-
-    this.setupItems();
-
-    this.setupEnemies();
-
-    this.setupBullets();
-
-    this.setupExplosions();
-
-    this.setupText();
-
-    this.setupAudio();
-
-    //  Setup Submarine
-    this.aSubmarine = new Submarine( 0, this.game, this.player );
-    this.aSubmarine.create();
-
-
-
-    //  Create KeyBoard Inputs
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-  },
-
-  update: function() {
-
-    //	Constantly move the sea
-    this.sea.tilePosition.y += 0.2;
-
-    this.checkCollisions();
-
-    this.spawnEnemies();
-
-    this.enemyFire();
-
-    this.processPlayerInput();
-
-    this.processDelayedEffects();
-
-    //  onEnterFrame Submarine
-    this.aSubmarine.update();
-
-  },
-
-  render: function() {
-    //  For debug only ...
-    //this.game.debug.body(this.enemy);
-    //this.game.debug.body(this.player);
-  },
-
-
-
-
-  /**
-   * SETUP FUNCTIONS
-   * INIT()
-   *
-   */
-
   initVars: function(){
 
-    // HUD
+    //  Game
+    this.score = 0;
+    this.stage = 0; //  0 = Beta testing Stage
+    this.stageIsEnded = false;
+    this.oStagesParams = {
+      0: {
+        stageScore: 2000,
+        enableEnemyAt: 0,
+        enableShooterAt: 0,
+        bossInitialHealth: 50
+      },
+      1: {
+        stageScore: 10000,
+        enableEnemyAt: 0,
+        enableShooterAt: 0,
+        bossInitialHealth: 375
+      },
+      2: {
+        stageScore: 15000,
+        enableEnemyAt: 0,
+        enableShooterAt: 0,
+        bossInitialHealth: 500
+      }
+    };
+    this.stageScore = this.oStagesParams[this.stage].stageScore;
     this.sea = null;
     this.bombBlast = null;
-    this.instructions = null;
-    this.instExpire = 0;
-    this.showReturn = false;
-    this.showReturnDuration = 2000;
-    this.score = 0;
-    this.stageScore = 20000;
+    this.nbEnemyKill = 0;
+    this.nbShooterKill = 0;
+    this.nbBossKill = 0;
+    
+
+    
 
     //  PowerUps
     this.powerUpPool = null;
@@ -120,17 +73,11 @@ BasicGame.Game.prototype = {
     this.powerUp2IsOnFor = 0;
     this.powerUp2Duration = 25000;
 
-    //  Bombs
-    this.bombsPool = null;
-    this.nbBombs = 3;
-    this.bombActive = false;
-    this.bombActiveFor = 0;
-    this.bombActiveTime = 2000;
+    
 
     //  Player
     this.player = null;
     this.playerSpeed = 300;
-    this.lives = null;
     this.nbLives = 3;
     this.bulletPool = null;
     this.nextShotAt = 0;
@@ -138,9 +85,24 @@ BasicGame.Game.prototype = {
     this.nextBombAt = 0;
     this.useBombDelay = 2000;
     this.weaponLevel = 0;
-    this.maxWeaponLevel = 7;
+    this.maxWeaponLevel = 5;
     this.ghostUntil = null;
     this.ghostDuration = 3000;
+
+    //  Bombs
+    this.nbBombs = 3;
+    this.bombActive = false;
+    this.bombActiveFor = 0;
+    this.bombActiveTime = 2000;
+
+    //  HUD
+    this.HUD = new HUD(this.game, this.score, this.nbLives, this.nbBombs, this.stage);
+
+    //  Submarines
+    this.Submarines = new Submarines(this.game);
+
+    //  Destroyers
+    this.Destroyers = new Destroyers(this.game);
 
     //  Enemy
     this.enemyPool = null;
@@ -154,7 +116,7 @@ BasicGame.Game.prototype = {
     this.shooterPool = null;
     this.shooterReward = 400;
     this.nextShooterAt = 0;
-    this.shooterDelay = 3000;
+    this.shooterDelay = 5000;
     this.shooterShotDelay = 2000;
     this.shooterInitialHealth = 5;
     this.shooterDropRate = 0.1;
@@ -165,20 +127,92 @@ BasicGame.Game.prototype = {
     this.boss = null;
     this.bossReward = 10000;
     this.bossApproaching = false;
-    this.bossInitialHealth = 500;
+    this.bossInitialHealth = this.oStagesParams[this.stage].bossInitialHealth;
     this.nextBossShotAt = 0;
     this.bossShotDelay = 1000;
 
-    // Submarine
-    this.aSubmarine = null;
-    this.submarinePool = null;
-
     //  Temp for testing
-    this.enemyDropRate = 0.5;
-    this.shooterDropRate = 0.5;
-    this.stageScore = 2000;
+    //this.enemyDropRate = 0.5;
+    //this.shooterDropRate = 0.5;
+    //this.stageScore = 2000;
 
   },
+
+  /**
+   * DEFAULT PHASER'S AUTO FUNCTIONS
+   *
+   */
+  create: function() {
+
+    //  Initalize Game's variables
+    this.initVars();
+
+    //  Add the sea
+    this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
+
+    //  Submarines
+    this.Submarines.create();
+
+    //  Destroyers
+    this.Destroyers.create();
+
+    this.setupPlayer();
+
+    this.setupItems();
+
+    this.setupEnemies();
+
+    this.setupBullets();
+
+    this.setupExplosions();
+
+    this.setupAudio();
+
+    //  HUD
+    this.HUD.create();
+
+    //  Create KeyBoard Inputs
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+  },
+
+  update: function() {
+
+    //	Constantly move the sea
+    this.sea.tilePosition.y += 0.2;
+
+    //  Submarines
+    this.Submarines.update();
+
+    //  Destroyers
+    this.Destroyers.update();
+
+    this.checkCollisions();
+
+    this.spawnEnemies();
+
+    this.enemyFire();
+
+    this.processPlayerInput();
+
+    this.processDelayedEffects();
+
+    //  HUD
+    this.HUD.update();
+
+  },
+
+  //  Debug ...
+  render: function() {},
+
+
+
+
+  /**
+   * SETUP FUNCTIONS
+   * INIT()
+   *
+   */
 
   setupPlayer: function() {
 
@@ -271,11 +305,12 @@ BasicGame.Game.prototype = {
     });
 
     // start spawning 5 seconds into the game
-    this.nextShooterAt = this.time.now + 5000;
+    this.nextShooterAt = this.time.now + this.shooterDelay;
 
 
 
     //  Add the BOSS
+    this.bossInitialHealth = this.oStagesParams[this.stage].bossInitialHealth;
     this.bossPool = this.add.group();
     this.bossPool.enableBody = true;
     this.bossPool.physicsBodyType = Phaser.Physics.ARCADE;
@@ -344,46 +379,6 @@ BasicGame.Game.prototype = {
     this.explosionPool.forEach(function(explosion) {
       explosion.animations.add('boom');
     });
-
-  },
-
-  setupText: function() {
-
-    //  Create + Add the intro instructions
-    this.instructions = this.add.text(510, 600,
-      'Use Arrow Keys to Move, Press Z to Fire\n' +
-      'Tapping/clicking does both', {
-        font: '20px monospace',
-        fill: '#fff',
-        align: 'center'
-      }
-    );
-    this.instructions.anchor.setTo(0.5, 0.5);
-    this.instExpire = this.time.now + 10000;
-
-    //  Add score text
-    this.scoreText = this.add.text(
-      510, 30, '' + this.score, {
-        font: '20px monospace',
-        fill: '#fff',
-        align: 'center'
-      }
-    );
-    this.scoreText.anchor.setTo(0.5, 0.5);
-
-    //  Add Lifes
-    this.lives = this.add.group();
-    for (var i = 0; i < this.nbLives; i++) {
-      var life = this.lives.create(924 + (30 * i), 30, 'player');
-      life.scale.setTo(0.5, 0.5);
-      life.anchor.setTo(0.5, 0.5);
-    }
-
-    //  Add Bombs
-    this.bombsPool = this.add.group();
-    for (var i = 0; i < this.nbBombs; i++) {
-      var bomb = this.bombsPool.create(30 + (30 * i), 15, 'bomb');
-    }
 
   },
 
@@ -470,7 +465,9 @@ BasicGame.Game.prototype = {
   spawnEnemies: function() {
 
     //  Add Random Enemy on update
-    if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
+    if (this.score >= this.oStagesParams[this.stage].enableEnemyAt 
+        && this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
+
       this.nextEnemyAt = this.time.now + this.enemyDelay;
       var enemy = this.enemyPool.getFirstExists(false);
       // spawn at a random location top of the screen
@@ -478,11 +475,14 @@ BasicGame.Game.prototype = {
       // also randomize the speed
       enemy.body.velocity.y = this.rnd.integerInRange(30, 60);
       enemy.play('fly');
+
     }
 
 
     //  Add random enemy#2
-    if (this.nextShooterAt < this.time.now && this.shooterPool.countDead() > 0) {
+    if (this.score >= this.oStagesParams[this.stage].enableShooterAt 
+        && this.nextShooterAt < this.time.now && this.shooterPool.countDead() > 0) {
+
       this.nextShooterAt = this.time.now + this.shooterDelay;
       var shooter = this.shooterPool.getFirstExists(false);
 
@@ -502,6 +502,7 @@ BasicGame.Game.prototype = {
 
       // each shooter has their own shot timer
       shooter.nextShotAt = 0;
+
     }
 
   },
@@ -534,7 +535,7 @@ BasicGame.Game.prototype = {
         var rightBullet = this.enemyBulletPool.getFirstExists(false);
         rightBullet.reset(this.boss.x + 10 + i * 10, this.boss.y + 20);
 
-        if (this.boss.health > 250) {
+        if (this.boss.health > this.bossInitialHealth/2) {
           // aim directly at the player
           this.physics.arcade.moveToObject(leftBullet, this.player, 150);
           this.physics.arcade.moveToObject(rightBullet, this.player, 150);
@@ -582,8 +583,9 @@ BasicGame.Game.prototype = {
     //  Fire button
     if (this.input.keyboard.isDown(Phaser.Keyboard.Z) ||
       this.input.activePointer.isDown) {
-      if (this.returnText && this.returnText.exists) {
-        this.quitGame();
+      if (this.stageIsEnded && this.game.time.now > this.HUD.showReturn && this.HUD.returnText) {
+        // this.quitGame();
+        this.nextStage();
       } else {
         this.fire();
       }
@@ -598,28 +600,10 @@ BasicGame.Game.prototype = {
 
   processDelayedEffects: function() {
 
-    //  Fade the intro instructions out
-    if (this.instructions.exists && this.time.now > this.instExpire) {
-      this.instructions.destroy();
-    }
-
     //  Out of ghost mode
     if (this.ghostUntil && this.ghostUntil < this.time.now) {
       this.ghostUntil = null;
       this.player.play('fly');
-    }
-
-    //  Add a “back to main menu”
-    if (this.showReturn && this.time.now > this.showReturn) {
-      this.returnText = this.add.text(
-        512, 400,
-        'Press Z or Tap Game to go back to Main Menu', {
-          font: '16px sans-serif',
-          fill: '#fff'
-        }
-      );
-      this.returnText.anchor.setTo(0.5, 0.5);
-      this.showReturn = false;
     }
 
     //  Check if Bomb blast is activated
@@ -657,6 +641,8 @@ BasicGame.Game.prototype = {
 
       this.powerUp2IsOn = false;
       this.powerUp2IsOnFor = 0;
+
+      this.player.speed = this.playerSpeed;
 
     }
 
@@ -790,13 +776,12 @@ BasicGame.Game.prototype = {
 
     this.nextBombAt = this.time.now + this.useBombDelay;
 
-    var bomb = this.bombsPool.getFirstAlive();
-
-    if (bomb) {
+    if ( this.HUD.bombsIconsPool.getFirstAlive() ) {
 
       this.explosionSFX.play();
 
-      bomb.kill();
+      this.nbBombs--;
+      this.HUD.removeBomb();
 
       //  Add the bomb effect .png
       this.bombBlast = this.add.tileSprite(0, 0, 1024, 768, 'bombBlast');
@@ -821,29 +806,30 @@ BasicGame.Game.prototype = {
     // crashing into an enemy only deals 5 damage
     this.damageEnemy(enemy, 5);
 
-    //  Add an explosion
-    /*var explosion = this.add.sprite(player.x, player.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);*/
+    if ( this.HUD.livesIcons.getFirstAlive() ) {
 
-    var life = this.lives.getFirstAlive();
-    if (life) {
-
-      life.kill();
+      this.nbLives--;
+      this.HUD.removeLife();
 
       this.weaponLevel = 0;
 
       this.powerUp2IsOn = false;
       this.powerUp2IsOnFor = 0;
 
+      this.player.speed = this.playerSpeed;
+
       this.ghostUntil = this.time.now + this.ghostDuration;
       this.player.play('ghost');
 
     } else {
+
+      this.HUD.refreshInfos(this.stage, this.nbEnemyKill, this.nbShooterKill, this.nbBossKill);
+      this.HUD.displayEnd(false);
+
       this.explode(player);
       player.kill();
-      this.displayEnd(false);
+      this.endStage();
+
     }
 
   },
@@ -852,10 +838,6 @@ BasicGame.Game.prototype = {
     bullet.kill();
 
     //  Add an explosion
-    /*var explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);*/
     this.damageEnemy(enemy, 1);
   },
 
@@ -865,7 +847,21 @@ BasicGame.Game.prototype = {
 
   damageEnemy: function(enemy, damage) {
 
-    enemy.damage(damage);
+    enemy.damage(damage); //  BUG - ERROR - NEED UPDATE - RENDER :
+    /*
+                              Uncaught TypeError: Cannot call method 'damage' of null Game.js:813
+                              BasicGame.Game.damageEnemy Game.js:813
+                              BasicGame.Game.playerHit Game.js:766
+                              b.Physics.Arcade.collideSpriteVsGroup phaser.min.js:16
+                              b.Physics.Arcade.collideHandler phaser.min.js:16
+                              b.Physics.Arcade.overlap phaser.min.js:16
+                              BasicGame.Game.checkCollisions Game.js:395
+                              BasicGame.Game.update Game.js:77
+                              b.StateManager.update phaser.min.js:7
+                              b.Game.update phaser.min.js:9
+                              b.RequestAnimationFrame.updateRAF phaser.min.js:13
+                              window.requestAnimationFrame.forceSetTimeOut._onLoop
+    */
 
     if (enemy.alive) {
 
@@ -879,8 +875,17 @@ BasicGame.Game.prototype = {
       this.spawnPowerUp(enemy);
       this.addToScore(enemy.reward);
 
+      if(enemy.key === 'greenEnemy') this.nbEnemyKill++;
+      if(enemy.key === 'whiteEnemy') this.nbShooterKill++;
+
       if (enemy.key === 'boss') {
-        this.displayEnd(true);
+
+        this.nbBossKill++;
+
+        this.HUD.refreshInfos(this.stage, this.nbEnemyKill, this.nbShooterKill, this.nbBossKill);
+        this.HUD.displayEnd(true);
+
+        this.endStage();
       }
 
     }
@@ -940,17 +945,19 @@ BasicGame.Game.prototype = {
     this.powerUp2IsOn = true;
     this.powerUp2IsOnFor = this.time.now + this.powerUp2Duration;
 
+    this.player.speed = this.playerSpeed * 2;
+
 
 
   },
 
   addToScore: function(score) {
+
     this.score += score;
-    this.scoreText.text = this.score;
+    
+    this.HUD.updateScore(this.score);
 
     if (this.score >= this.stageScore && this.bossPool.countDead() == 1) {
-
-      //this.displayEnd(true);
 
       this.spawnBoss();
 
@@ -983,30 +990,64 @@ BasicGame.Game.prototype = {
     explosion.body.velocity.y = sprite.body.velocity.y;
   },
 
-  displayEnd: function(win) {
+  endStage: function() {
     // you can't win and lose at the same time
-    if (this.endText && this.endText.exists) {
+    /*if (this.endText && this.endText.exists) {
       return;
-    }
+    }*/
 
-    var msg = win ? 'You Win!!!' : 'Game Over!';
-    this.endText = this.add.text(
-      510, 320, msg, {
-        font: '72px serif',
-        fill: '#fff'
-      }
-    );
-    this.endText.anchor.setTo(0.5, 0);
+    console.log("endStage");
 
-    this.showReturn = this.time.now + this.showReturnDuration;
+    this.bossPool.destroy();
+
+    this.stageIsEnded = true;
 
     this.enemyPool.destroy();
     this.shooterPool.destroy();
     this.bossPool.destroy();
     this.enemyBulletPool.destroy();
+    this.powerUpPool.destroy();
+    this.powerUp2Pool.destroy();
+
+    this.Destroyers.endStage();
+
+    this.Submarines.endStage();
 
     this.bombActive = false;
     this.bombActiveFor = 0;
+    if(this.bombBlast) this.bombBlast.destroy();
+
+    this.powerUp2IsOn = false;
+    this.powerUp2IsOnFor = 0;
+    this.player.speed = this.playerSpeed;
+
+  },
+
+  nextStage: function(){
+
+    if( this.stage < 2 && this.nbLives ){
+
+      this.stage = this.stage +1;
+      this.stageIsEnded = false;
+      this.stageScore = this.score + this.oStagesParams[this.stage].stageScore;
+
+      this.HUD.nextStage( this.stage );
+
+      this.setupItems();
+
+      this.setupEnemies();
+
+      this.setupBullets();
+
+      this.Destroyers.create();
+
+      this.Submarines.create();
+
+    }else{
+
+      this.quitGame();
+
+    }
 
   },
 
@@ -1017,12 +1058,12 @@ BasicGame.Game.prototype = {
     this.sea.destroy();
     this.player.destroy();
     this.explosionPool.destroy();
-    this.instructions.destroy();
-    this.scoreText.destroy();
-    this.endText.destroy();
-    this.returnText.destroy();
 
-    this.score = 0;
+    this.HUD.quitGame();
+
+    this.Destroyers.quitGame();
+
+    this.Submarines.quitGame();
 
     //	Then let's go back to the main menu.
     this.state.start('MainMenu');

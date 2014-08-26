@@ -53,9 +53,9 @@ BasicGame.Preloader.prototype = {
 		this.load.audio('playerFire', ['assets/game/player-fire.wav']);
 		this.load.audio('powerUp', ['assets/game/powerup.wav']);
 
-		//	Preload Submarines
-		var loadSubmarine = new Submarine( 0, this.game );
-		loadSubmarine.preload();
+		this.load.spritesheet('destroyer', 'assets/game/destroyer.png', 32, 174);
+		
+		this.load.spritesheet('submarine', 'assets/game/sub.png', 32, 98);
 
 		//this.load.atlas('playButton', 'assets/interface/play_button.png', 'images/play_button.json');
 		/*this.load.audio('titleMusic', ['audio/main_menu.mp3']);
