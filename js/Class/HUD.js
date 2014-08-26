@@ -5,7 +5,7 @@
  *
  *  Handles Text rendering for UI
  *
- */
+*/
 
 HUD = function ( game, score, playerLifes, nbBombs, stage ) {
 
@@ -57,6 +57,32 @@ HUD = function ( game, score, playerLifes, nbBombs, stage ) {
     //  Bombs Icons
     this.bombsIconsPool = null;
 
+    //  Stage text
+    this.curStage = null;
+    this.curStageText = "Stage : ";
+
+    //  Score Board 
+    this.scoreBoard = null;
+    this.SBText = null;
+    this.SBTxtStyle = {
+      font: '25px sans-serif',
+      fill: '#fff'
+    };
+    this.SBTxtStyle2 = {
+      font: '20px sans-serif',
+      fill: '#fff'
+    };
+    this.SBTextTxt = "Scoreboard :";
+    this.SBEnemyIcon = null;
+    this.SBEnemyTxt = null;
+    this.SBNbEnemy = 0;
+    this.SBShooterIcon = null;
+    this.SBShooterTxt = null;
+    this.SBNbShooter = 0;
+    this.SBBossIcon = null;
+    this.SBBossTxt = null;
+    this.SBNbBoss = 0;
+
 };
 
 HUD.prototype = {
@@ -76,8 +102,12 @@ HUD.prototype = {
     this.instExpire = this.game.time.now + 10000;
 
     //  Add HUD.scoreText
-    this.scoreText = this.game.add.text(510, 30, '' + this.score, this.scoreTxtStyle);
+    this.scoreText = this.game.add.text(510, 70, '' + this.score, this.scoreTxtStyle);
     this.scoreText.anchor.setTo(0.5, 0.5);
+
+    //  Add HUD.curStage
+    this.curStage = this.game.add.text(510, 30, '' + this.curStageText + this.gameStage, this.scoreTxtStyle);
+    this.curStage.anchor.setTo(0.5, 0.5);
 
     //  Add Lifes icons
     this.livesIcons = this.game.add.group();
@@ -117,9 +147,9 @@ HUD.prototype = {
 
       var msg = this.showReturnTxt;
 
-      if( this.gameStage < 2 ) msg = "Entering stage : " + (this.gameStage + 1);
+      if( this.gameStage < 2 && this.nbLifes ) msg = "Entering stage : " + (this.gameStage + 1);
 
-      this.returnText = this.game.add.text(512, 400, msg, this.showReturnStyle);
+      this.returnText = this.game.add.text(512, 700, msg, this.showReturnStyle);
       this.returnText.anchor.setTo(0.5, 0.5);
       this.showReturn = false;
 
@@ -141,9 +171,68 @@ HUD.prototype = {
    * MISC FUNCTIONS
    * Custom made function
    *==================================
+  */
+
+  /**
+   *
+   *  FUNCTION removeBomb();
+   *
+   *
+   *
+  */
+  removeBomb: function(){
+
+    this.bombsIconsPool.getFirstAlive().kill();
+    this.nbBombs--;
+
+  },
+
+  /**
+   *
+   *  FUNCTION removeLife();
+   *
+   *
+   *
+  */
+  removeLife: function(){
+
+    this.livesIcons.getFirstAlive().kill();
+    this.nbLifes--;
+
+  },
+
+  /**
+   *
+   *  FUNCTION updateScore();
+   *
+   *
+   *
+  */
+  updateScore: function(score){
+
+    this.score = score;
+
+    this.scoreText.text = this.score;
+
+  },
+
+  /**
+   *
+   *  FUNCTION refreshInfos();
+   *
+   *
+   *
    */
+  refreshInfos: function(stage, nbEnemyKill, nbShooterKill, nbBossKill){
 
+    this.gameStage = stage;
+    this.SBNbEnemy = nbEnemyKill;
+    this.SBNbShooter = nbShooterKill;
+    this.SBNbBoss = nbBossKill;
 
+    console.log("updated");
+
+  },
 
   /**
    *
@@ -153,11 +242,43 @@ HUD.prototype = {
    *
    */
   displayEnd: function(win){
-
+    console.log(this.SBNbEnemy);
+    console.log(this.SBNbShooter);
+    console.log(this.SBNbBoss);
     //  Display end Msg
     var msg = win ? 'You Win!!!' : 'Game Over!';
-    this.endText = this.game.add.text(510, 320, msg, this.endTxtStyle);
+    this.endText = this.game.add.text(510, 150, msg, this.endTxtStyle);
     this.endText.anchor.setTo(0.5, 0);
+
+    //  Display Scoreboard
+    this.scoreBoard = this.game.add.group();
+
+    this.SBText = this.game.add.text(510, 300, this.SBTextTxt, this.SBTxtStyle);
+    this.SBText.anchor.setTo(0.5, 0);
+
+    this.scoreBoard.add(this.SBText);
+
+    this.SBEnemyTxt = this.game.add.text(510, 360, " X " + this.SBNbEnemy, this.SBTxtStyle2);
+    this.SBEnemyTxt.anchor.setTo(0.5, 0);
+    this.SBEnemyIcon = this.game.add.sprite(450, 360, 'greenEnemy');
+    this.SBEnemyTxt.anchor.setTo(0.5, 0);
+
+    this.scoreBoard.add(this.SBEnemyTxt);
+    this.scoreBoard.add(this.SBEnemyIcon);
+
+    this.SBShooterTxt = this.game.add.text(510, 420, " X " + this.SBNbShooter, this.SBTxtStyle2);
+    this.SBShooterTxt.anchor.setTo(0.5, 0);
+    this.SBShooterIcon = this.game.add.sprite(450, 420, 'whiteEnemy');
+
+    this.scoreBoard.add(this.SBShooterTxt);
+    this.scoreBoard.add(this.SBShooterIcon);
+
+    this.SBBossTxt = this.game.add.text(510, 480, " X " + this.SBNbBoss, this.SBTxtStyle2);
+    this.SBBossTxt.anchor.setTo(0.5, 0);
+    this.SBBossIcon = this.game.add.sprite(410, 480, 'boss');
+
+    this.scoreBoard.add(this.SBBossTxt);
+    this.scoreBoard.add(this.SBBossIcon);
 
     //  Show “back to main menu” in [x] seconds
     this.showReturn = this.game.time.now + this.showReturnDuration;
@@ -168,8 +289,12 @@ HUD.prototype = {
 
     this.gameStage = stage;
 
+    this.curStage.text = '' + this.curStageText + this.gameStage;
+
     this.endText.destroy();
     this.returnText.destroy();
+
+    this.scoreBoard.destroy();
 
   },
 
@@ -185,6 +310,7 @@ HUD.prototype = {
     //  Destroyz
     this.instructions.destroy();
     this.scoreText.destroy();
+    this.curStage.destroy();
     this.returnText.destroy();
 
   }

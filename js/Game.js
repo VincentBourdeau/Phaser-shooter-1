@@ -38,10 +38,10 @@ BasicGame.Game.prototype = {
     this.stageIsEnded = false;
     this.oStagesParams = {
       0: {
-        stageScore: 5000,
+        stageScore: 2000,
         enableEnemyAt: 0,
         enableShooterAt: 0,
-        bossInitialHealth: 250
+        bossInitialHealth: 50
       },
       1: {
         stageScore: 10000,
@@ -59,6 +59,9 @@ BasicGame.Game.prototype = {
     this.stageScore = this.oStagesParams[this.stage].stageScore;
     this.sea = null;
     this.bombBlast = null;
+    this.nbEnemyKill = 0;
+    this.nbShooterKill = 0;
+    this.nbBossKill = 0;
     
 
     
@@ -777,7 +780,8 @@ BasicGame.Game.prototype = {
 
       this.explosionSFX.play();
 
-      this.HUD.bombsIconsPool.getFirstAlive().kill();
+      this.nbBombs--;
+      this.HUD.removeBomb();
 
       //  Add the bomb effect .png
       this.bombBlast = this.add.tileSprite(0, 0, 1024, 768, 'bombBlast');
@@ -802,16 +806,10 @@ BasicGame.Game.prototype = {
     // crashing into an enemy only deals 5 damage
     this.damageEnemy(enemy, 5);
 
-    //  Add an explosion
-    /*var explosion = this.add.sprite(player.x, player.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);*/
-
-
     if ( this.HUD.livesIcons.getFirstAlive() ) {
 
-      this.HUD.livesIcons.getFirstAlive().kill();
+      this.nbLives--;
+      this.HUD.removeLife();
 
       this.weaponLevel = 0;
 
@@ -824,10 +822,14 @@ BasicGame.Game.prototype = {
       this.player.play('ghost');
 
     } else {
+
+      this.HUD.refreshInfos(this.stage, this.nbEnemyKill, this.nbShooterKill, this.nbBossKill);
       this.HUD.displayEnd(false);
+
       this.explode(player);
       player.kill();
       this.endStage();
+
     }
 
   },
@@ -859,7 +861,7 @@ BasicGame.Game.prototype = {
                               b.Game.update phaser.min.js:9
                               b.RequestAnimationFrame.updateRAF phaser.min.js:13
                               window.requestAnimationFrame.forceSetTimeOut._onLoop
-     */
+    */
 
     if (enemy.alive) {
 
@@ -873,8 +875,16 @@ BasicGame.Game.prototype = {
       this.spawnPowerUp(enemy);
       this.addToScore(enemy.reward);
 
+      if(enemy.key === 'greenEnemy') this.nbEnemyKill++;
+      if(enemy.key === 'whiteEnemy') this.nbShooterKill++;
+
       if (enemy.key === 'boss') {
+
+        this.nbBossKill++;
+
+        this.HUD.refreshInfos(this.stage, this.nbEnemyKill, this.nbShooterKill, this.nbBossKill);
         this.HUD.displayEnd(true);
+
         this.endStage();
       }
 
@@ -942,8 +952,10 @@ BasicGame.Game.prototype = {
   },
 
   addToScore: function(score) {
+
     this.score += score;
-    this.HUD.scoreText.text = this.score;
+    
+    this.HUD.updateScore(this.score);
 
     if (this.score >= this.stageScore && this.bossPool.countDead() == 1) {
 
@@ -984,6 +996,8 @@ BasicGame.Game.prototype = {
       return;
     }*/
 
+    console.log("endStage");
+
     this.bossPool.destroy();
 
     this.stageIsEnded = true;
@@ -1011,7 +1025,7 @@ BasicGame.Game.prototype = {
 
   nextStage: function(){
 
-    if( this.stage < 2 ){
+    if( this.stage < 2 && this.nbLives ){
 
       this.stage = this.stage +1;
       this.stageIsEnded = false;
